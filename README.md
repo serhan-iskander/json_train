@@ -82,6 +82,7 @@ The API route reads the graph file, builds the in-memory graph once, and on each
 
 - Graph data:
   - Nodes have a unique `name`.
+  - Every service in defined in Nodes list, if a service is not defined it will be ignored.
   - Edges are directed and defined via each node’s `to` list of target node names.
   - Cycles may exist; `buildResults` detects circular dependencies.
 - Route semantics:
