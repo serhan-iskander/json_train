@@ -12,7 +12,6 @@ A Next.js API that loads the Train-Ticket microservice graph and computes all po
 ## Tech Stack
 
 - Next.js (App Router)
-- React
 - TypeScript
 
 ## Installation
