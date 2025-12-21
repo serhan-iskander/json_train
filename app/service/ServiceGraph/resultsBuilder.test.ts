@@ -105,24 +105,4 @@ describe('buildResults', () => {
         expect(result[0].vulnerabilities).toEqual(['SQL Injection']);
         expect(result[0].hasVulnerability).toBe(true);
     });
-
-    it('should handle sink nodes with vulnerabilities and preserve them', () => {
-        const node: serviceNode = {
-            name: 'VulnNode',
-            kind: 'rds',
-            language: 'typescript',
-            path: '/VulnNode',
-            publicExposed: true,
-            vulnerabilities: ['SQL Injection'],
-            to: [],
-            alreadyIncluded: false,
-            foundPath: '',
-            startWithPublic: true,
-            endWithSink: false,
-            hasVulnerability: true,
-        };
-        const result = buildResults([node]);
-        expect(result[0].vulnerabilities).toEqual(['SQL Injection']);
-        expect(result[0].hasVulnerability).toBe(true);
-    });
 });

@@ -8,6 +8,7 @@ A Next.js API that loads the Train-Ticket microservice graph and computes all po
 - Applies filters to the graph using [`filter`](app/service/ServiceGraph/resultsFilter.ts).
 - Computes route results via [`buildResults`](app/service/ServiceGraph/resultsBuilder.ts) for circular dependencies and helping the UI.
 - Exposes an HTTP API implemented in [app/api/route.ts](app/api/route.ts).
+- Each service has alreadyIncluded and foundPath for the UI to point to an already exisiting service
 
 ## Tech Stack
 
