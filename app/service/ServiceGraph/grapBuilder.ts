@@ -11,7 +11,6 @@ export function buildGraph(data: string): Map<string, serviceNode> {
 }
 
 function setGraphRoutes(graph: Map<string, serviceNode>): void {
-    // Reset flags (do not touch foundPath)
     for (const node of graph.values()) {
         node.startWithPublic = false;
         node.endWithSink = false;
@@ -81,17 +80,14 @@ function initGraph(data: string): Map<string, serviceNode> {
     for (const edge of parsed.edges ?? []) {
         const fromNode = nodeMap.get(edge.from);
         if (!fromNode) {
-            // Skip edges with unknown source
             continue;
         }
 
         for (const targetName of normalizeToArray(edge.to)) {
             const targetNode = nodeMap.get(targetName);
             if (!targetNode) {
-                // Skip dangling edges pointing to missing nodes
                 continue;
             }
-            // Avoid duplicate links
             if (!fromNode.to?.some(t => t.name === targetNode.name)) {
                 fromNode.to?.push(targetNode);
             }

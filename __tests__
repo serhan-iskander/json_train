@@ -1,0 +1,21 @@
+jest.config.cjs
+module.exports = {
+  preset: 'next/jest',
+  testEnvironment: 'jsdom',
+  setupFilesAfterEnv: ['./jest.setup.ts'],
+};
+
+package.json
+{
+  "scripts": {
+    "test": "jest"
+  }
+}
+
+jest.setup.ts
+import '@testing-library/jest-dom/extend-expect';
+
+__tests__/jest-works.test.ts
+test('hello world!', () => {
+  expect(1 + 1).toBe(2);
+});
