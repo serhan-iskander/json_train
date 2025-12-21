@@ -1,36 +1,105 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Train-Ticket Graph API
 
-## Getting Started
+A Next.js API that loads the Train-Ticket microservice graph and computes all possible routes with security metadata. It supports filtering via a JSON query expression and returns a compact result for exploration.
 
-First, run the development server:
+## Overview
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- Loads input graph from [public/train-ticket-be.json](public/train-ticket-be.json) using [`buildGraph`](app/service/ServiceGraph/grapBuilder.ts)(and sets the route ends with sink and/or have a vulnerability in one of the nodes.).
+- Applies filters to the graph using [`filter`](app/service/ServiceGraph/resultsFilter.ts).
+- Computes route results via [`buildResults`](app/service/ServiceGraph/resultsBuilder.ts) for circular dependencies and helping the UI.
+- Exposes an HTTP API implemented in [app/api/route.ts](app/api/route.ts).
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Tech Stack
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- Next.js (App Router)
+- React
+- TypeScript
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Installation
 
-## Learn More
+- pnpm:
+  - `pnpm install`
+- npm:
+  - `npm install`
 
-To learn more about Next.js, take a look at the following resources:
+## Running
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- Dev:
+  - `pnpm dev` or `npm run dev`
+  - Open `http://localhost:3000`
+- Build & Start:
+  - `pnpm build && pnpm start` or `npm run build && npm start`
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## API
 
-## Deploy on Vercel
+- Endpoint: `GET /api`
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Query Parameters
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `query` (optional): a simple filter string parsed by [`filter`](app/service/ServiceGraph/resultsFilter.ts). No JSONQuery is used.
+  - Examples:
+    - No filter: `/api`
+    - Filter by vulnerability: `/api?query=hasVulnerability=true`
+    - Filter by name contains: `/api?query=name=service`
+    - Filter by child service name contains: `/api?query=to=name>basic`
+
+
+### Response
+
+- Success:
+  - Status 200
+  - Body:
+    ```json
+    {
+      "status": "success",
+      "result": { /* output of buildResults(filteredGraph) */ }
+    }
+    ```
+- Error:
+  - Status 500
+  - Body:
+    ```json
+    {
+      "status": "error",
+      "result": "message"
+    }
+    ```
+
+## Architecture
+
+- Graph loader: [`buildGraph`](app/service/ServiceGraph/grapBuilder.ts)
+- Route computation: [`buildResults`](app/service/ServiceGraph/resultsBuilder.ts)
+- Filtering: [`filter`](app/service/ServiceGraph/resultsFilter.ts)
+- Node model: [app/service/ServiceGraph/serviceNode.ts](app/service/ServiceGraph/serviceNode.ts)
+- API route: [app/api/route.ts](app/api/route.ts)
+
+The API route reads the graph file, builds the in-memory graph once, and on each request:
+1. Parses `query` (if provided).
+2. Applies [`filter`](app/service/ServiceGraph/resultsFilter.ts) to the graph.
+3. Returns the output of [`buildResults`](app/service/ServiceGraph/resultsBuilder.ts).
+
+## Assumptions
+
+- Graph data:
+  - Nodes have a unique `name`.
+  - Edges are directed and defined via each node’s `to` list of target node names.
+  - Cycles may exist; `buildResults` detects circular dependencies.
+- Route semantics:
+  - Routes are paths through the directed graph.
+  - A route terminates at a sink node (no `to`).
+- Query behavior:
+  - The `query` string supports simple equality and containment checks implemented in `resultsFilter.ts`.
+  - `name=foo` matches nodes whose name contains `foo`.
+  - `hasVulnerability=true` matches routes that include vulnerable nodes.
+  - `to=name>bar` matches routes where a target node’s name contains `bar`.
+- API/runtime:
+  - Graph is loaded from `public/train-ticket-be.json` and cached per server process.
+  - Only `GET /api` is supported; request bodies are ignored.
+  - Requires Node.js 18+ with Next.js App Router and TypeScript.
+- Performance:
+  - Route enumeration can grow quickly with branching and cycles; prefer filtering first on large graphs.
+
+
+## Notes
+
+- Input graph source: [public/train-ticket-be.json](public/train-ticket-be.json)
