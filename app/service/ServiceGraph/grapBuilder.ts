@@ -25,41 +25,36 @@ function setGraphRoutes(graph: Map<string, serviceNode>): void {
     // DFS
     for (const start of graph.values()) {
         const path: serviceNode[] = [];
-        const visit = (current: serviceNode, seen: Set<string>, pathHasVuln: boolean) => {
+        const visit = (current: serviceNode, seen: Set<string>) => {
+            path.push(current);
             seen.add(current.name);
-            const currentPathHasVuln = pathHasVuln || hasVuln(current);
+            const currentPathHasVuln = hasVuln(current);
 
             if (isSink(current)) {
-                // Path reaches a sink: mark entire path
                 for (const n of path) {
                     n.endWithSink = true;
                     if (currentPathHasVuln) {
                         n.hasVulnerability = true;
                     }
                 }
-                // Stop at sink
             } else {
-                // If path contains a vulnerability, mark entire path
                 if (currentPathHasVuln) {
                     for (const n of path) {
                         n.hasVulnerability = true;
                     }
                 }
-                path.push(current);
-                // Continue traversal
                 for (const next of current.to ?? []) {
                     if (!seen.has(next.name)) {
-                        visit(next, seen, currentPathHasVuln);
+                        visit(next, seen);
                     }
                 }
             }
-
 
             path.pop();
             seen.delete(current.name);
         };
 
-        visit(start, new Set<string>(), hasVuln(start));
+        visit(start, new Set<string>());
     }
 }
 

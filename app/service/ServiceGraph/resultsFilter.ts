@@ -11,7 +11,7 @@ export function filter(data: Map<string, serviceNode>, query?: string): serviceN
   if (!key || !needle) return Array.from(data.values());
 
   return Array.from(data.values()).filter(node => {
-    const value = (node as Record<string, unknown>)[key];
+    const value = ((node as unknown) as Record<string, unknown>)[key];
     return matchesLike(value, needle);
   });
 }
